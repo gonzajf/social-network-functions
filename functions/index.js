@@ -22,10 +22,11 @@ const app = express();
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
 
+const db = admin.firestore();
+
 app.get('/posts', (request, response) => {
 
-    admin.firestore()
-        .collection('posts')
+    db.collection('posts')
         .orderBy('createdAt', 'desc')
         .get()
         .then(data =>  {
@@ -52,7 +53,7 @@ app.post('/posts', (request, response) => {
         createdAt: new Date().toISOString()
     };
 
-    admin.firestore().collection('posts')
+    db.collection('posts')
         .add(newPost)
         .then(doc => {
             response.json({message: `document ${doc.id} created succesfully`})
