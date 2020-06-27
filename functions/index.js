@@ -1,35 +1,30 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const { response, request } = require('express');
 
 admin.initializeApp({
     credential: admin.credential.cert(require('./keys/social-network-16a8b-firebase-adminsdk-hv0kh-0182c1f48d.json'))
 });
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-exports.helloWorld = functions.https.onRequest((request, response) => {
-    response.send("Hello world!");
-});
+const express = require('express');
+const app = express();
 
-exports.getPosts = functions.https.onRequest((request, response) => {
+app.get('/posts', (request, response) => {
+
     admin.firestore().collection('posts').get()
-        .then(data =>  {
-            let posts = [];
-            data.forEach(doc => {
-                posts.push(doc.data());
-            })
-            return response.json(posts);
+    .then(data =>  {
+        let posts = [];
+        data.forEach(doc => {
+            posts.push(doc.data());
         })
-        .catch(error => console.error(error));
+        return response.json(posts);
+    })
+    .catch(error => console.error(error));
+
 });
 
-exports.createPost = functions.https.onRequest((request, response) => {
+app.post('/posts', (request, response) => {
   
-    if(request.method !== 'POST') {
-        return response.status(400).json({error: 'Method not allowed'});
-    }
-
     const newPost = {
         body: request.body.body,
         userHandle: request.body.userHandle,
@@ -46,3 +41,5 @@ exports.createPost = functions.https.onRequest((request, response) => {
             console.error(error);
         });
 });
+
+exports.api = functions.https.onRequest(app); 
