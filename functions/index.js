@@ -74,13 +74,43 @@ app.post('/signup', (request, response) => {
     };
 
     //TODO validate data
-    firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password)
+    let token, userId;
+
+    db.doc(`/users/${newUser.userHandle}`).get()
+        .then(doc => {
+            if(doc.exists) {
+                return response.status(400).json({userHandle: 'This userHandle is already taken'});
+            } else {
+                return firebase
+                        .auth()
+                        .createUserWithEmailAndPassword(newUser.email, newUser.password);
+            }
+        })
         .then(data => {
-            return response.status(201).json({message: `user ${data.user.uid} signed up succesfully`});
+            userId = data.user.uid;
+            return data.user.getIdToken();
+        })
+        .then(tokenPromise => {
+            
+            token = tokenPromise;
+            const userCredentials = {
+                userHandle: newUser.userHandle,
+                email: newUser.email,
+                createdAt: new Date().toISOString(),
+                userId: userId
+            };
+            return db.doc(`/users/${newUser.userHandle}`).set(userCredentials);
+        })
+        .then(() => {
+            return response.status(201).json({ token });
         })
         .catch(error => {
             console.error();
-            return response.status(500).json({error: error.code});
+            if(error.code === 'auth/email-already-in-use') {
+                return response.status(400).json({email: 'Email is already in use'});    
+            } else {
+                return response.status(500).json({error: error.code});
+            }
         });
 });
 
