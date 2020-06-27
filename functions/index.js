@@ -63,4 +63,24 @@ app.post('/posts', (request, response) => {
         });
 });
 
+app.post('/signup', (request, response) => {
+
+    const newUser = {
+        email: request.body.email,
+        password: request.body.password,
+        confirmPassword: request.body.confirmPassword,
+        userHandle: request.body.userHandle
+    };
+
+    //TODO validate data
+    firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password)
+        .then(data => {
+            return response.status(201).json({message: `user ${data.user.uid} signed up succesfully`});
+        })
+        .catch(error => {
+            console.error();
+            return response.status(500).json({error: error.code});
+        });
+});
+
 exports.api = functions.https.onRequest(app); 
