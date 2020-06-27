@@ -20,6 +20,8 @@ const firebaseConfig = {
 const express = require('express');
 const app = express();
 const firebase = require('firebase');
+const { response } = require('express');
+const { error } = require('firebase-functions/lib/logger');
 firebase.initializeApp(firebaseConfig);
 
 const db = admin.firestore();
@@ -141,6 +143,42 @@ app.post('/signup', (request, response) => {
             } else {
                 return response.status(500).json({error: error.code});
             }
+        });
+});
+
+app.post('/login', (request, response) => {
+
+    const user = {
+        email: request.body.email,
+        password: request.body.password
+    };
+
+    let errors = {};
+
+    if(isEmpty(user.email)) {
+        errors.email = 'Must not be empty';
+    }
+    if(isEmpty(user.password)) {
+        errors.password = 'Must not be empty';
+    }
+
+    if(Object.keys(errors).length > 0) {
+        return response.status(400).json(errors);
+    }
+
+    firebase.auth().signInWithEmailAndPassword(user.email, user.password)
+        .then(data => {
+            return data.user.getIdToken();
+        })
+        .then(token => {
+            return response.json({ token });
+        })
+        .catch(error => {
+            console.error();
+            if(error.code === 'auth/wrong-password') {
+                return response.status(403).json({ general: 'Wrong credentials. Please try again.'})
+            }
+            return response.status(500).json({error: error.code});
         });
 });
 
