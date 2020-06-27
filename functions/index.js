@@ -11,15 +11,23 @@ const app = express();
 
 app.get('/posts', (request, response) => {
 
-    admin.firestore().collection('posts').get()
-    .then(data =>  {
-        let posts = [];
-        data.forEach(doc => {
-            posts.push(doc.data());
+    admin.firestore()
+        .collection('posts')
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then(data =>  {
+            let posts = [];
+            data.forEach(doc => {
+                posts.push({
+                    screamId: doc.id,
+                    body: doc.data().body,
+                    userHandle: doc.data().userHandle,
+                    createdAt: doc.data().createdAt
+                });
+            })
+            return response.json(posts);
         })
-        return response.json(posts);
-    })
-    .catch(error => console.error(error));
+        .catch(error => console.error(error));
 
 });
 
@@ -28,7 +36,7 @@ app.post('/posts', (request, response) => {
     const newPost = {
         body: request.body.body,
         userHandle: request.body.userHandle,
-        createdAt: admin.firestore.Timestamp.fromDate(new Date())
+        createdAt: new Date().toISOString()
     };
 
     admin.firestore().collection('posts')
