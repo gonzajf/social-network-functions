@@ -64,6 +64,15 @@ app.post('/posts', (request, response) => {
         });
 });
 
+const isEmpty = (string) => {
+    return string.trim() === '' ? true : false;
+}
+
+const isEmail = (email) => {
+    const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return email.match(emailRegEx) ? true : false;
+}
+
 app.post('/signup', (request, response) => {
 
     const newUser = {
@@ -73,7 +82,28 @@ app.post('/signup', (request, response) => {
         userHandle: request.body.userHandle
     };
 
+    let errors = {};
     //TODO validate data
+    if(isEmpty(newUser.email)) {
+        errors.email = 'Must not be empty';
+    } else if(!isEmail(newUser.email)) { 
+        errors.email = 'Must be a valid email adress';
+    }
+
+    if(isEmpty(newUser.password)) {
+        errors.password = 'Must not be empty';
+    }
+    if(newUser.password !== newUser.confirmPassword) {
+        errors.confirmPassword = 'Passwords must match';
+    }
+    if(isEmpty(newUser.userHandle)) {
+        errors.userHandle = 'Must not be empty';
+    }
+
+    if(Object.keys(errors).length > 0) {
+        return response.status(400).json(errors);
+    }
+
     let token, userId;
 
     db.doc(`/users/${newUser.userHandle}`).get()
