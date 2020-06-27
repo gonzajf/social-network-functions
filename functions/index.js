@@ -1,13 +1,26 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const { response, request } = require('express');
 
 admin.initializeApp({
     credential: admin.credential.cert(require('./keys/social-network-16a8b-firebase-adminsdk-hv0kh-0182c1f48d.json'))
 });
 
+const firebaseConfig = {
+    apiKey: "AIzaSyCDOVI3C4JEuUwavw4qMeEVQRA6e-TW3g8",
+    authDomain: "social-network-16a8b.firebaseapp.com",
+    databaseURL: "https://social-network-16a8b.firebaseio.com",
+    projectId: "social-network-16a8b",
+    storageBucket: "social-network-16a8b.appspot.com",
+    messagingSenderId: "859201943712",
+    appId: "1:859201943712:web:ed3766f9648c06c998b1c5",
+    measurementId: "G-T2376YVMK8"
+  };
+
+
 const express = require('express');
 const app = express();
+const firebase = require('firebase');
+firebase.initializeApp(firebaseConfig);
 
 app.get('/posts', (request, response) => {
 
