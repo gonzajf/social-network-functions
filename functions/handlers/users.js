@@ -1,4 +1,4 @@
-const {db} = require('../utils/admin');
+const {admin, db} = require('../utils/admin');
 const firebaseConfig = require('../keys/firebaseConfig');
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
@@ -21,6 +21,8 @@ exports.signup = (request, response) => {
         response.status(400).json(errors);
     }
    
+    const noImg = 'noImg.png';
+
     let token, userId;
 
     db.doc(`/users/${newUser.userHandle}`).get()
@@ -44,6 +46,7 @@ exports.signup = (request, response) => {
                 userHandle: newUser.userHandle,
                 email: newUser.email,
                 createdAt: new Date().toISOString(),
+                imageUrl: `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${noImg}?alt=media`,
                 userId: userId
             };
             return db.doc(`/users/${newUser.userHandle}`).set(userCredentials);
@@ -89,3 +92,5 @@ exports.login = (request, response) => {
             return response.status(500).json({error: error.code});
         });
 }
+
+//TODO change profile image
