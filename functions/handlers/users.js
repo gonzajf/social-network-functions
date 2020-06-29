@@ -108,3 +108,28 @@ exports.addUserDetails = (request, response) => {
             return response.status(500).json({error: error.code});
         })
 }
+
+exports.getAuthenticatedUser = (request, response) => {
+
+    let responseData = {};
+
+    db.doc(`/users/${request.user.userHandle}`).get()
+        .then(doc => {
+            if(doc.exists) {
+                responseData.credentials = doc.data();
+                return db.collection('likes').where('userHandle', '==', request.user.userHandle).get();
+            }
+        })
+        .then(data => {
+            
+            responseData.likes = [];
+            data.forEach(doc => {
+                responseData.likes.push(doc.data());
+            });
+            return response.json(responseData);
+        })
+        .catch(error => {
+            console.error();
+            return response.status(500).json({error: error.code});
+        })
+}
