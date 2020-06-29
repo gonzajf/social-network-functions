@@ -3,7 +3,7 @@ const firebaseConfig = require('../keys/firebaseConfig');
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
 
-const {validateSignUpData, validateLoginData} = require('../utils/validators');
+const {validateSignUpData, validateLoginData, reduceUserDetails } = require('../utils/validators');
 const e = require('express');
 
 exports.signup = (request, response) => {
@@ -94,3 +94,17 @@ exports.login = (request, response) => {
 }
 
 //TODO change profile image
+
+exports.addUserDetails = (request, response) => {
+
+    let userDetails = reduceUserDetails(request.body);
+
+    db.doc(`/users/${request.user.userHandle}`).update(userDetails)
+        .then(() => {
+            return response.json({message: 'Details added succesfully'});
+        })
+        .catch(error => {
+            console.error();
+            return response.status(500).json({error: error.code});
+        })
+}
