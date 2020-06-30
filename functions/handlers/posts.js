@@ -1,4 +1,4 @@
-const db = require('../utils/admin');
+const {db} = require('../utils/admin');
 
 exports.getAllPosts = (request, response) => {
 
@@ -41,3 +41,32 @@ exports.postOnePost = (request, response) => {
             console.error(error);
         });
 }
+
+ exports.getPost = (req, res) => {
+        let postData = {};
+        db.doc(`/posts/${req.params.postId}`)
+          .get()
+          .then((doc) => {
+            if (!doc.exists) {
+              return res.status(404).json({ error: 'Scream not found' });
+            }
+            postData = doc.data();
+            postData.postId = doc.id;
+            return db
+              .collection('comments')
+              .orderBy('createdAt', 'desc')
+              .where('postId', '==', req.params.postId)
+              .get();
+          })
+          .then((data) => {
+            postData.comments = [];
+            data.forEach((doc) => {
+              postData.comments.push(doc.data());
+            });
+            return res.json(postData);
+          })
+          .catch((err) => {
+            console.error(err);
+            res.status(500).json({ error: err.code });
+          });
+      };
