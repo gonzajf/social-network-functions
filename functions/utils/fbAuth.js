@@ -23,6 +23,7 @@ module.exports = (request, response, next) => {
         })
         .then(data => {
             request.user.userHandle = data.docs[0].data().userHandle;
+            request.user.imageUrl = data.docs[0].data().imageUrl;
             return next();
         })
         .catch(error => {
