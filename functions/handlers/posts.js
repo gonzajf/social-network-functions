@@ -1,5 +1,6 @@
 const {db} = require('../utils/admin');
 const { error } = require('firebase-functions/lib/logger');
+const { response } = require('express');
 
 exports.getAllPosts = (request, response) => {
 
@@ -29,13 +30,18 @@ exports.postOnePost = (request, response) => {
     const newPost = {
         body: request.body.body,
         userHandle: request.user.userHandle,
-        createdAt: new Date().toISOString()
+        userImage: request.user.imageUrl,
+        createdAt: new Date().toISOString(),
+        likeCount: 0,
+        commentCount: 0
     };
 
     db.collection('posts')
         .add(newPost)
         .then(doc => {
-            response.json({message: `document ${doc.id} created succesfully`})
+            const resPost = newPost;
+            resPost.postId = doc.id;
+            response.json({resPost});
         })
         .catch(error => {
             response.status(500).json({error: 'something went wrong'});
@@ -105,4 +111,53 @@ exports.commentOnPost = (request, response) => {
           response.status(500).json({error: 'Something went wrong'})
         })
     })
+};
+
+exports.likePost = (request, response) => {
+
+  const likeDocument = db.collection('likes').where('userHandle', '==', request.user.userHandle)
+    .where('postId', '==', request.params.postId).limit(1);
+
+  const postDocument = db.doc(`/posts/${request.params.postId}`);
+
+  let postData;
+
+  postDocument.get()
+    .then(doc => {
+      if(doc.exists) {
+        postData = doc.data();
+        postData.postId = doc.id;
+        return likeDocument.get();
+      }
+      else {
+        return response.status(404).json({error: 'Post not found'});
+      }
+    })
+    .then(data => {
+      if(data.empty) {
+        return db.collection('likes').add({
+          postId: request.params.postId,
+          userHandle: request.user.userHandle
+        })
+        .then(() => {
+          postData.likeCount++;
+          return postDocument.update({likeCount: postData.likeCount});
+        })
+        .then(() => {
+          return response.json(postData);
+        })
+      } 
+      else {
+        return response.status(400).json({error: 'Post already liked'});
+      }
+    })
+    .catch(error => {
+      console.log(error);
+      response.status(500).json({error: error.code});
+    })
+
+};
+
+exports.unlikePost = (request, response) => {
+
 };
