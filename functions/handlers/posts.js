@@ -160,4 +160,42 @@ exports.likePost = (request, response) => {
 
 exports.unlikePost = (request, response) => {
 
+  const likeDocument = db.collection('likes').where('userHandle', '==', request.user.userHandle)
+  .where('postId', '==', request.params.postId).limit(1);
+
+  const postDocument = db.doc(`/posts/${request.params.postId}`);
+
+  let postData;
+
+  postDocument.get()
+    .then(doc => {
+      if(doc.exists) {
+        postData = doc.data();
+        postData.postId = doc.id;
+        return likeDocument.get();
+      }
+      else {
+        return response.status(404).json({error: 'Post not found'});
+      }
+    })
+    .then(data => {
+      if(data.empty) {
+        return response.status(400).json({error: 'Post not liked'});
+      
+      } 
+      else {
+        return db.doc(`/likes/${data.docs[0].id}`).delete()
+        .then(() => {
+          postData.likeCount--;
+          return postDocument.update({likeCount: postData.likeCount});
+        })
+        .then(() => {
+          return response.json(postData);
+        })
+      }
+    })
+    .catch(error => {
+      console.log(error);
+      response.status(500).json({error: error.code});
+    })
 };
