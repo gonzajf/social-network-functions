@@ -101,16 +101,18 @@ exports.commentOnPost = (request, response) => {
       if(!doc.exists) {
         return response.status(404).json({error: 'Post not found'});
       }
-
-      return db.collection('comments').add(newComment)
-        .then(() => {
-          response.json(newComment);
-        })
-        .catch(error => {
-          console.log(error);
-          response.status(500).json({error: 'Something went wrong'})
-        })
+      return doc.ref.update({commentCount: doc.data().commentCount+1});
+    })   
+    .then(() => {
+      return db.collection('comments').add(newComment);
     })
+    .then(() => {
+      response.json(newComment);
+    })
+    .catch(error => {
+      console.log(error);
+      response.status(500).json({error: 'Something went wrong'})
+    });
 };
 
 exports.likePost = (request, response) => {
