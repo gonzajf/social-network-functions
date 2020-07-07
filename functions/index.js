@@ -8,17 +8,18 @@ const {getAllPosts,
         getPost, 
         commentOnPost, 
         likePost, 
-        unlikePost } = require('./handlers/posts');
+        unlikePost,
+        deletePost } = require('./handlers/posts');
 
 const { signup, login, addUserDetails, getAuthenticatedUser} = require('./handlers/users');
 
 app.get('/posts', getAllPosts);
 app.post('/posts', FBAuth, postOnePost);
 app.get('/posts/:postId', getPost);
+app.delete('/posts/:postId', FBAuth, deletePost);
 app.post('/post/:postId/comment', FBAuth, commentOnPost);
 app.get('/posts/:postId/like', FBAuth, likePost);
 app.get('/posts/:postId/unlike', FBAuth, unlikePost);
-
 
 app.post('/signup', signup);
 app.post('/login', login);
