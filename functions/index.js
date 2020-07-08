@@ -3,6 +3,8 @@ const app = require('express')();
 
 const FBAuth = require('./utils/fbAuth');
 
+const { db } = require('./utils/admin');
+
 const {getAllPosts, 
         postOnePost, 
         getPost, 
@@ -27,3 +29,27 @@ app.post('/user', FBAuth, addUserDetails);
 app.get('/user', FBAuth, getAuthenticatedUser);
 
 exports.api = functions.https.onRequest(app); 
+
+exports.createNotificationOnLike = functions.firestore.document('likes/{id}')
+        .onCreate((snapshot) => {
+                db.doc(`/posts/${snapshot.data().postId}`).get()
+                        .then(doc => {
+                                if(doc.exists) {
+                                        return db.doc(`/notifications/${snapshot.id}`).set({
+                                                createAt: new Date().toISOString(),
+                                                recipient: doc.data().userHandle,
+                                                sender: snapshot.data().userHandle,
+                                                type: 'like',
+                                                read: false,
+                                                postId: doc.id
+                                        });
+                                }
+                        })
+                        .then(() => {
+                                return;
+                        })        
+                        .catch(error => {
+                                console.errro(error);
+                                return;
+                        })
+        });
