@@ -53,3 +53,27 @@ exports.createNotificationOnLike = functions.firestore.document('likes/{id}')
                                 return;
                         })
         });
+
+exports.createNotificationOnComment = functions.firestore.document('comments/{id}')
+        .onCreate((snapshot) => {
+                db.doc(`/posts/${snapshot.data().postId}`).get()
+                        .then(doc => {
+                                if(doc.exists) {
+                                        return db.doc(`/notifications/${snapshot.id}`).set({
+                                                createAt: new Date().toISOString(),
+                                                recipient: doc.data().userHandle,
+                                                sender: snapshot.data().userHandle,
+                                                type: 'comment',
+                                                read: false,
+                                                postId: doc.id
+                                        });
+                                }
+                        })
+                        .then(() => {
+                                return;
+                        })        
+                        .catch(error => {
+                                console.errro(error);
+                                return;
+                        })
+        });
