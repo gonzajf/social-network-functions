@@ -185,3 +185,20 @@ exports.getUserDetails = (request, response) => {
         })
 
 }
+
+exports.markNotificationsRead = (request, response) => {
+ 
+    let batch = db.batch();
+    request.body.forEach(notificationId => {
+        const notification = db.doc(`/notifications/${notificationId}`);
+        batch.update(notification, {read: true});
+    });
+    batch.commit()
+        .then(() => {
+            return response.json({message: 'Notification mark read'});
+        })
+        .catch(error => {
+            console.error(error);
+            return response.json(500).json({error: error.code});
+        });
+}   

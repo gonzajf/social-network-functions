@@ -17,7 +17,8 @@ const { signup,
         login, 
         addUserDetails, 
         getAuthenticatedUser, 
-        getUserDetails } = require('./handlers/users');
+        getUserDetails,
+        markNotificationsRead } = require('./handlers/users');
 
 app.get('/posts', getAllPosts);
 app.post('/posts', FBAuth, postOnePost);
@@ -32,6 +33,7 @@ app.post('/login', login);
 app.post('/user', FBAuth, addUserDetails);
 app.get('/user', FBAuth, getAuthenticatedUser);
 app.get('/users/:userHandle', getUserDetails);
+app.post('/notifications', FBAuth, markNotificationsRead);
 
 exports.api = functions.https.onRequest(app); 
 
