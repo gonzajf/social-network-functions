@@ -39,7 +39,8 @@ exports.api = functions.https.onRequest(app);
 
 exports.createNotificationOnLike = functions.firestore.document('likes/{id}')
         .onCreate((snapshot) => {
-                db.doc(`/posts/${snapshot.data().postId}`).get()
+                return db.doc(`/posts/${snapshot.data().postId}`)
+                        .get()
                         .then(doc => {
                                 if(doc.exists) {
                                         return db.doc(`/notifications/${snapshot.id}`).set({
@@ -51,14 +52,8 @@ exports.createNotificationOnLike = functions.firestore.document('likes/{id}')
                                                 postId: doc.id
                                         });
                                 }
-                        })
-                        .then(() => {
-                                return;
-                        })        
-                        .catch(error => {
-                                console.error(error);
-                                return;
-                        })
+                        })      
+                        .catch(error => console.error(error));
         });
 
 
