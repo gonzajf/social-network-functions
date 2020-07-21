@@ -42,7 +42,7 @@ exports.createNotificationOnLike = functions.firestore.document('likes/{id}')
                 return db.doc(`/posts/${snapshot.data().postId}`)
                         .get()
                         .then(doc => {
-                                if(doc.exists) {
+                                if(doc.exists && doc.data().userHandle !== snapshot.data().userHandle) {
                                         return db.doc(`/notifications/${snapshot.id}`).set({
                                                 createAt: new Date().toISOString(),
                                                 recipient: doc.data().userHandle,
