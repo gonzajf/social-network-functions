@@ -88,3 +88,20 @@ exports.createNotificationOnComment = functions.firestore.document('comments/{id
                                 return;
                         })
         });
+
+exports.onUserImageChange = functions.firestore.document('/users/{userId}')
+        .onUpdate((change) => {
+                console.log(change.before.data());
+                console.log(change.after.data());
+                if(change.before.data().imageUrl !== change.after.data().imageUrl) {
+                        let batch = db.batch();
+                        return db.collection('posts').where('userHandle', '==', change.before.data().userHandle).get()
+                                .then(data => {
+                                        data.forEach(doc => {
+                                                const post = db.doc(`/post/${doc.id}`); 
+                                                batch.update(post, {userImage: change.after.data().imageUrl});
+                                        })
+                                        return batch.commit();
+                                })
+                }
+        });
