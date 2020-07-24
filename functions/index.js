@@ -94,7 +94,7 @@ exports.onUserImageChange = functions.firestore.document('/users/{userId}')
                 console.log(change.before.data());
                 console.log(change.after.data());
                 if(change.before.data().imageUrl !== change.after.data().imageUrl) {
-                        let batch = db.batch();
+                        const batch = db.batch();
                         return db.collection('posts').where('userHandle', '==', change.before.data().userHandle).get()
                                 .then(data => {
                                         data.forEach(doc => {
@@ -104,4 +104,32 @@ exports.onUserImageChange = functions.firestore.document('/users/{userId}')
                                         return batch.commit();
                                 })
                 }
+        });
+
+exports.onPostDelete = functions.firestore.document('/posts/{postId}')
+        .onDelete((snapshot, context) => {
+                const postId = context.params.postId;
+                const batch = db.batch();                
+                return db.collection('comments').where('postId', '==', postId).get()
+                        .then(data => {
+                                data.forEach(doc => {
+                                        batch.delete(db.doc(`/comments/${doc.id}`)); 
+                                })
+                                return db.collection('likes').where('postId', '==', postId);
+                        })
+                        .then(data => {
+                                data.forEach(doc => {
+                                        batch.delete(db.doc(`/likes/${doc.id}`)); 
+                                })
+                                return db.collection('notifications').where('postId', '==', postId);
+                        })
+                        .then(data => {
+                                data.forEach(doc => {
+                                        batch.delete(db.doc(`/notifications/${doc.id}`)); 
+                                })
+                                return batch.commit();
+                        })
+                        .catch(error => {
+                                console.error(error);
+                        })
         });
