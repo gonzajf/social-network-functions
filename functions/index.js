@@ -103,6 +103,8 @@ exports.onUserImageChange = functions.firestore.document('/users/{userId}')
                                         })
                                         return batch.commit();
                                 })
+                } else {
+                        return true;
                 }
         });
 
